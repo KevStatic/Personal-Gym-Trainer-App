@@ -1,50 +1,60 @@
-# Welcome to your Expo app 👋
+# AI Gym Trainer
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A polished, theme-aware fitness companion built with Expo Router. It includes a tabbed workout experience, an AI coach chat UI, profile management, and a smooth authentication flow.
 
-## Get started
+## What’s Included
+
+- Home dashboard with stats, workout card, and daily AI tip
+- AI Coach chat UI with quick prompts
+- Workouts list with weekly calendar chips
+- Profile screen with theme switching
+- Auth screens (login + register) with gradient backgrounds
+- Light and dark mode support
+
+## Screens & Routes
+
+- `/(tabs)/index` – Home dashboard
+- `/(tabs)/coach` – AI Coach
+- `/(tabs)/workouts` – Workouts
+- `/(tabs)/profile` – Profile
+- `/auth/login` – Login
+- `/auth/register` – Register
+
+## Tech Stack
+
+- Expo + Expo Router
+- React Native
+- TypeScript
+- `expo-linear-gradient` for backgrounds
+- `@expo/vector-icons` for icons
+
+## Getting Started
 
 1. Install dependencies
 
-   ```bash
-   npm install
-   ```
+```bash
+npm install
+```
 
 2. Start the app
 
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
 ```bash
-npm run reset-project
+npm run start
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Project Structure
 
-## Learn more
+- `app/` – File-based routes and screens
+- `src/components/` – Reusable UI components
+- `src/context/` – Theme context and providers
+- `src/theme/` – Theme colors and typography
+- `constants/` – Shared constants
 
-To learn more about developing your project with Expo, look at the following resources:
+## Theming
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+Theme state lives in `src/context/ThemeContext.tsx`. Colors are defined in `src/theme/color.ts`. Gradients are applied per screen and in `src/components/ScreenWrapper.tsx`.
 
-## Join the community
+## Notes
 
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- The auth screens are UI-only by default. Wire them to your backend or auth provider as needed.
+- To change the initial route (auth vs tabs), update `app/_layout.tsx`.
