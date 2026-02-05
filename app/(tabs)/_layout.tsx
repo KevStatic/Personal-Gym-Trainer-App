@@ -1,35 +1,49 @@
-import { Tabs } from 'expo-router';
-import React from 'react';
+import { useTheme } from "@/src/context/ThemeContext";
+import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import { Tabs } from "expo-router";
 
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
+export default function TabsLayout() {
+  const { themeColors } = useTheme();
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
-        tabBarButton: HapticTab,
-      }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
-        }}
-      />
-    </Tabs>
+    <LinearGradient
+      style={{ flex: 1 }}
+      colors={
+        themeColors.background === "#0A0A0A"
+          ? ["#0A0A0A", "#151515"]  // dark mode
+          : ["#e0e7ff", "#ffffff"]  // light mode
+      }
+    >
+      <Tabs
+        screenOptions={({ route }) => ({
+          headerShown: false,
+          tabBarActiveTintColor: themeColors.tabActive,
+          tabBarInactiveTintColor: themeColors.tabInactive,
+          tabBarStyle: {
+            backgroundColor: themeColors.tabBackground,
+            borderTopWidth: 0.4,
+            borderTopColor: themeColors.border,
+            height: 70,
+            paddingBottom: 14,
+            paddingTop: 6,
+          },
+          tabBarIcon: ({ color, size }) => {
+            let iconName: any;
+
+            if (route.name === "index") iconName = "home-outline";
+            if (route.name === "coach") iconName = "chatbubble-ellipses-outline";
+            if (route.name === "workouts") iconName = "barbell-outline";
+            if (route.name === "profile") iconName = "person-outline";
+
+            return <Ionicons name={iconName} size={22} color={color} />;
+          },
+        })}
+      >
+        <Tabs.Screen name="index" options={{ title: "Home" }} />
+        <Tabs.Screen name="coach" options={{ title: "Coach" }} />
+        <Tabs.Screen name="workouts" options={{ title: "Workouts" }} />
+        <Tabs.Screen name="profile" options={{ title: "Profile" }} />
+      </Tabs>
+    </LinearGradient>
   );
 }
