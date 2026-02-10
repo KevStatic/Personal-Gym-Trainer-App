@@ -1,28 +1,56 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Link } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
+import { Link, router } from "expo-router";
 import { useState } from "react";
 import {
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { useAuth } from "@/src/context/AuthContext";
 import { useTheme } from "@/src/context/ThemeContext";
 
 export default function RegisterScreen() {
+  const { signUp, isAuthLoading, isBackendConfigured } = useAuth();
   const { themeColors } = useTheme();
   const isDark = themeColors.background === "#0A0A0A";
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [formError, setFormError] = useState("");
+  const [formSuccess, setFormSuccess] = useState("");
+  const [verificationSent, setVerificationSent] = useState(false);
+
+  const handleCreateAccount = async () => {
+    const result = await signUp(name, email, password);
+
+    if (!result.ok) {
+      setFormSuccess("");
+      setVerificationSent(false);
+      setFormError(result.error ?? "Unable to create account. Please try again.");
+      return;
+    }
+
+    if (result.requiresEmailVerification) {
+      setFormError("");
+      setVerificationSent(true);
+      setFormSuccess(result.message ?? "Verify your email before signing in.");
+      return;
+    }
+
+    setVerificationSent(false);
+    setFormSuccess(result.message ?? "");
+    setFormError("");
+    router.replace("/");
+  };
 
   const gradientColors = isDark
     ? (["#0b1220", "#0A0A0A"] as const)
@@ -115,7 +143,27 @@ export default function RegisterScreen() {
       fontSize: 16,
       fontWeight: "700",
     },
+    errorText: {
+      color: "#ef4444",
+      fontSize: 13,
+      fontWeight: "600",
+    },
+    successText: {
+      color: "#22c55e",
+      fontSize: 13,
+      fontWeight: "600",
+    },
+    warningText: {
+      color: "#f59e0b",
+      fontSize: 13,
+      fontWeight: "600",
+    },
     helperText: {
+      fontSize: 12,
+      color: themeColors.muted,
+      textAlign: "center",
+    },
+    infoText: {
       fontSize: 12,
       color: themeColors.muted,
       textAlign: "center",
@@ -216,10 +264,35 @@ export default function RegisterScreen() {
                 colors={[themeColors.primary, isDark ? "#3b82f6" : "#1d4ed8"]}
                 style={styles.primaryButton}
               >
-                <TouchableOpacity style={styles.primaryButtonInner} activeOpacity={0.85}>
-                  <Text style={styles.primaryButtonText}>Create Account</Text>
+                <TouchableOpacity
+                  style={styles.primaryButtonInner}
+                  activeOpacity={0.85}
+                  onPress={handleCreateAccount}
+                  disabled={isAuthLoading || verificationSent}
+                >
+                  <Text style={styles.primaryButtonText}>
+                    {verificationSent
+                      ? "Verification Email Sent"
+                      : isAuthLoading
+                        ? "Creating Account..."
+                        : "Create Account"}
+                  </Text>
                 </TouchableOpacity>
               </LinearGradient>
+
+              {!isBackendConfigured && (
+                <Text style={styles.warningText}>
+                  Add Supabase keys in your .env to enable real authentication.
+                </Text>
+              )}
+
+              {!!formError && <Text style={styles.errorText}>{formError}</Text>}
+              {!!formSuccess && <Text style={styles.successText}>{formSuccess}</Text>}
+              {verificationSent && (
+                <Text style={styles.infoText}>
+                  Open your inbox, verify your account, then use Sign in.
+                </Text>
+              )}
 
               <Text style={styles.helperText}>
                 By continuing, you agree to our Terms and Privacy Policy.

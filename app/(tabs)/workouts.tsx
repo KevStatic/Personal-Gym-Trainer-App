@@ -2,14 +2,19 @@ import ScreenWrapper from "@/src/components/ScreenWrapper";
 import { useTheme } from "@/src/context/ThemeContext";
 import { typography } from "@/src/theme/typography";
 import { Ionicons } from "@expo/vector-icons";
+import type { ComponentProps } from "react";
 import { FlatList, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-const workouts = [
+type WorkoutIconName = ComponentProps<typeof Ionicons>["name"];
+
+const workouts: { id: string; title: string; subtitle: string; icon: WorkoutIconName }[] = [
   { id: "1", title: "Push Day", subtitle: "Chest • Shoulders • Triceps", icon: "barbell-outline" },
   { id: "2", title: "Pull Day", subtitle: "Back • Biceps", icon: "fitness-outline" },
   { id: "3", title: "Leg Day", subtitle: "Quads • Hamstrings • Glutes", icon: "walk-outline" },
   { id: "4", title: "Core Strength", subtitle: "Abs • Lower Back", icon: "body-outline" },
 ];
+
+type WorkoutItem = (typeof workouts)[number];
 
 export default function WorkoutsScreen() {
   const { themeColors } = useTheme();
@@ -66,7 +71,7 @@ export default function WorkoutsScreen() {
     },
   });
 
-  const renderItem = ({ item }) => (
+  const renderItem = ({ item }: { item: WorkoutItem }) => (
     <TouchableOpacity style={styles.card}>
       <View style={styles.cardLeft}>
         <Ionicons name={item.icon} size={28} color={themeColors.primary} />

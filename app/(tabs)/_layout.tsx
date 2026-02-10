@@ -1,10 +1,21 @@
+import { useAuth } from "@/src/context/AuthContext";
 import { useTheme } from "@/src/context/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { Tabs } from "expo-router";
+import { Redirect, Tabs } from "expo-router";
 
 export default function TabsLayout() {
+  const { isAuthenticated, isAuthInitializing } = useAuth();
   const { themeColors } = useTheme();
+
+  if (isAuthInitializing) {
+    return null;
+  }
+
+  if (!isAuthenticated) {
+    return <Redirect href="/auth/login" />;
+  }
+
   return (
     <LinearGradient
       style={{ flex: 1 }}

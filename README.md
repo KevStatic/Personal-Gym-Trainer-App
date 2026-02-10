@@ -10,6 +10,7 @@ A polished, theme-aware fitness companion built with Expo Router. It includes a 
 - Profile screen with theme switching
 - Auth screens (login + register) with gradient backgrounds
 - Light and dark mode support
+- Supabase-backed auth integration (via REST API)
 
 ## Screens & Routes
 
@@ -42,6 +43,25 @@ npm install
 npm run start
 ```
 
+## Supabase Setup
+
+1. Create a Supabase project.
+2. Copy `.env.example` to `.env` and add values:
+
+```bash
+EXPO_PUBLIC_SUPABASE_URL=...
+EXPO_PUBLIC_SUPABASE_ANON_KEY=...
+# or EXPO_PUBLIC_SUPABASE_KEY=... (new Supabase naming)
+```
+
+3. Open Supabase SQL Editor and run:
+
+```sql
+-- contents of supabase/schema.sql
+```
+
+4. In Supabase Auth settings, choose whether email confirmation is required.
+
 ## Project Structure
 
 - `app/` – File-based routes and screens
@@ -56,5 +76,6 @@ Theme state lives in `src/context/ThemeContext.tsx`. Colors are defined in `src/
 
 ## Notes
 
-- The auth screens are UI-only by default. Wire them to your backend or auth provider as needed.
+- Auth now uses Supabase Auth endpoints in `src/services/supabase/auth.ts`.
+- Workout data service stubs are in `src/services/supabase/workouts.ts` for future use.
 - To change the initial route (auth vs tabs), update `app/_layout.tsx`.

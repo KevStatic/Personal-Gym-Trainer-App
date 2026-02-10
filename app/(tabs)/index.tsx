@@ -1,10 +1,10 @@
 import ScreenWrapper from "@/src/components/ScreenWrapper";
 import { typography } from "@/src/theme/typography";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
+import { useTheme } from "@/src/context/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useTheme } from "@/src/context/ThemeContext";
 
 export default function HomeScreen() {
   const { theme, themeColors } = useTheme();

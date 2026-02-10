@@ -1,11 +1,19 @@
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Switch } from "react-native";
 import ScreenWrapper from "@/src/components/ScreenWrapper";
+import { useAuth } from "@/src/context/AuthContext";
+import { useTheme } from "@/src/context/ThemeContext";
 import { typography } from "@/src/theme/typography";
 import { Ionicons } from "@expo/vector-icons";
-import { useTheme } from "@/src/context/ThemeContext";
+import { router } from "expo-router";
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export default function ProfileScreen() {
+  const { signOut, user, isAuthLoading } = useAuth();
   const { theme, setTheme, themeColors } = useTheme();
+
+  const handleLogout = async () => {
+    await signOut();
+    router.replace("/auth/login");
+  };
 
   const styles = StyleSheet.create({
     header: {
@@ -99,9 +107,11 @@ export default function ProfileScreen() {
             source={{ uri: "https://cdn-icons-png.flaticon.com/512/1946/1946429.png" }}
             style={styles.avatar}
           />
-          <Text style={[typography.h2, { color: themeColors.text }]}>John Doe</Text>
+          <Text style={[typography.h2, { color: themeColors.text }]}>
+            {user?.name ?? "John Doe"}
+          </Text>
           <Text style={[typography.small, { color: themeColors.muted }]}>
-            Fitness Level: Intermediate
+            {user?.email ?? "Fitness Level: Intermediate"}
           </Text>
         </View>
 
@@ -205,9 +215,13 @@ export default function ProfileScreen() {
         </View>
 
         {/* Logout */}
-        <TouchableOpacity style={styles.logoutButton}>
+        <TouchableOpacity
+          style={[styles.logoutButton, isAuthLoading && { opacity: 0.7 }]}
+          onPress={handleLogout}
+          disabled={isAuthLoading}
+        >
           <Ionicons name="log-out-outline" size={22} color="white" />
-          <Text style={styles.logoutText}>Logout</Text>
+          <Text style={styles.logoutText}>{isAuthLoading ? "Logging out..." : "Logout"}</Text>
         </TouchableOpacity>
 
       </ScrollView>

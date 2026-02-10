@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import { darkColors, lightColors } from "@/src/theme/color";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import { Appearance } from "react-native";
-import { lightColors, darkColors } from "@/src/theme/color";
 
 type ThemeType = "light" | "dark" | "system";
 
@@ -18,17 +18,15 @@ const ThemeContext = createContext<ThemeContextProps>({
   toggleTheme: () => {},
 });
 
-type ThemeProviderProps = React.PropsWithChildren;
-
-export const ThemeProvider = ({ children }: ThemeProviderProps) => {
-  const systemScheme = Appearance.getColorScheme(); // "light" or "dark"
+export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setTheme] = useState<ThemeType>("system");
-  const [themeColors, setThemeColors] = useState(
-    systemScheme === "dark" ? darkColors : lightColors
-  );
+  const [themeColors, setThemeColors] = useState(lightColors);
 
   useEffect(() => {
-    const resolvedTheme = theme === "system" ? systemScheme : theme;
+    const currentSystemTheme = Appearance.getColorScheme(); // dynamic value each time
+
+    const resolvedTheme =
+      theme === "system" ? currentSystemTheme : theme;
 
     setThemeColors(resolvedTheme === "dark" ? darkColors : lightColors);
 
@@ -39,7 +37,7 @@ export const ThemeProvider = ({ children }: ThemeProviderProps) => {
     });
 
     return () => listener.remove();
-  }, [theme, systemScheme]);
+  }, [theme]);
 
   const toggleTheme = () => {
     if (theme === "light") setTheme("dark");

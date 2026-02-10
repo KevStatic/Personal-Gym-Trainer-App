@@ -1,27 +1,113 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Link } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
-import { useState } from "react";
+import { Link, router } from "expo-router";
+import { useEffect, useState } from "react";
 import {
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { useAuth } from "@/src/context/AuthContext";
 import { useTheme } from "@/src/context/ThemeContext";
 
+const REMEMBERED_LOGIN_KEY = "@ai-gym-trainer/remembered-login";
+
 export default function LoginScreen() {
+  const { signIn, requestPasswordReset, continueWithGoogle, isAuthLoading, isBackendConfigured } = useAuth();
   const { themeColors } = useTheme();
   const isDark = themeColors.background === "#0A0A0A";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
+  const [formError, setFormError] = useState("");
+  const [formSuccess, setFormSuccess] = useState("");
+
+  useEffect(() => {
+    const hydrateRememberedLogin = async () => {
+      try {
+        const raw = await AsyncStorage.getItem(REMEMBERED_LOGIN_KEY);
+        if (!raw) return;
+
+        const remembered = JSON.parse(raw) as { email?: string; rememberMe?: boolean };
+
+        if (remembered.email) {
+          setEmail(remembered.email);
+        }
+        if (typeof remembered.rememberMe === "boolean") {
+          setRememberMe(remembered.rememberMe);
+        }
+      } catch {
+        // Ignore malformed remembered-login state.
+      }
+    };
+
+    void hydrateRememberedLogin();
+  }, []);
+
+  const getAuthRedirectUrl = () => {
+    if (Platform.OS === "web" && typeof window !== "undefined") {
+      return `${window.location.origin}/auth/login`;
+    }
+
+    return "aigymtrainer://auth/login";
+  };
+
+  const handleSignIn = async () => {
+    const result = await signIn(email, password, rememberMe);
+
+    if (!result.ok) {
+      setFormSuccess("");
+      setFormError(result.error ?? "Unable to sign in. Please try again.");
+      return;
+    }
+
+    if (rememberMe) {
+      await AsyncStorage.setItem(
+        REMEMBERED_LOGIN_KEY,
+        JSON.stringify({
+          email: email.trim().toLowerCase(),
+          rememberMe: true,
+        })
+      );
+    } else {
+      await AsyncStorage.removeItem(REMEMBERED_LOGIN_KEY);
+    }
+
+    setFormSuccess("");
+    setFormError("");
+    router.replace("/");
+  };
+
+  const handleForgotPassword = async () => {
+    const result = await requestPasswordReset(email, getAuthRedirectUrl());
+
+    if (!result.ok) {
+      setFormSuccess("");
+      setFormError(result.error ?? "Unable to send reset email.");
+      return;
+    }
+
+    setFormError("");
+    setFormSuccess(result.message ?? "Password reset email sent.");
+  };
+
+  const handleContinueWithGoogle = async () => {
+    const result = await continueWithGoogle(getAuthRedirectUrl());
+
+    if (!result.ok) {
+      setFormSuccess("");
+      setFormError(result.error ?? "Unable to continue with Google.");
+    }
+  };
 
   const gradientColors = isDark
     ? (["#0b1220", "#0A0A0A"] as const)
@@ -119,6 +205,10 @@ export default function LoginScreen() {
       borderColor: isDark ? "#2f3a4f" : "#cbd5f5",
       backgroundColor: isDark ? "#111827" : "#eef2ff",
     },
+    checkboxChecked: {
+      backgroundColor: themeColors.primary,
+      borderColor: themeColors.primary,
+    },
     linkText: {
       color: themeColors.primary,
       fontWeight: "600",
@@ -136,6 +226,26 @@ export default function LoginScreen() {
       color: "white",
       fontSize: 16,
       fontWeight: "700",
+    },
+    errorText: {
+      color: "#ef4444",
+      fontSize: 13,
+      fontWeight: "600",
+    },
+    warningText: {
+      color: "#f59e0b",
+      fontSize: 13,
+      fontWeight: "600",
+    },
+    helperText: {
+      color: themeColors.muted,
+      fontSize: 12,
+      textAlign: "center",
+    },
+    successText: {
+      color: "#22c55e",
+      fontSize: 13,
+      fontWeight: "600",
     },
     dividerRow: {
       flexDirection: "row",
@@ -218,6 +328,7 @@ export default function LoginScreen() {
                     placeholderTextColor={themeColors.muted}
                     keyboardType="email-address"
                     autoCapitalize="none"
+                    autoComplete="email"
                     value={email}
                     onChangeText={setEmail}
                     selectionColor={themeColors.primary}
@@ -234,6 +345,7 @@ export default function LoginScreen() {
                     placeholder="••••••••"
                     placeholderTextColor={themeColors.muted}
                     secureTextEntry={!showPassword}
+                    autoComplete="password"
                     value={password}
                     onChangeText={setPassword}
                     selectionColor={themeColors.primary}
@@ -249,11 +361,23 @@ export default function LoginScreen() {
               </View>
 
               <View style={styles.row}>
-                <View style={styles.remember}>
-                  <View style={styles.checkbox} />
+                <TouchableOpacity
+                  style={styles.remember}
+                  activeOpacity={0.8}
+                  onPress={async () => {
+                    const next = !rememberMe;
+                    setRememberMe(next);
+                    if (!next) {
+                      await AsyncStorage.removeItem(REMEMBERED_LOGIN_KEY);
+                    }
+                  }}
+                >
+                  <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
+                    {rememberMe && <Ionicons name="checkmark" size={12} color="white" />}
+                  </View>
                   <Text style={styles.footerText}>Remember me</Text>
-                </View>
-                <TouchableOpacity activeOpacity={0.7}>
+                </TouchableOpacity>
+                <TouchableOpacity activeOpacity={0.7} onPress={handleForgotPassword}>
                   <Text style={styles.linkText}>Forgot password?</Text>
                 </TouchableOpacity>
               </View>
@@ -262,10 +386,31 @@ export default function LoginScreen() {
                 colors={[themeColors.primary, isDark ? "#3b82f6" : "#1d4ed8"]}
                 style={styles.primaryButton}
               >
-                <TouchableOpacity style={styles.primaryButtonInner} activeOpacity={0.85}>
-                  <Text style={styles.primaryButtonText}>Sign In</Text>
+                <TouchableOpacity
+                  style={styles.primaryButtonInner}
+                  activeOpacity={0.85}
+                  onPress={handleSignIn}
+                  disabled={isAuthLoading}
+                >
+                  <Text style={styles.primaryButtonText}>
+                    {isAuthLoading ? "Signing In..." : "Sign In"}
+                  </Text>
                 </TouchableOpacity>
               </LinearGradient>
+
+              {!isBackendConfigured && (
+                <Text style={styles.warningText}>
+                  Add Supabase keys in your .env to enable real authentication.
+                </Text>
+              )}
+
+              {!!formError && <Text style={styles.errorText}>{formError}</Text>}
+              {!!formSuccess && <Text style={styles.successText}>{formSuccess}</Text>}
+              {rememberMe && (
+                <Text style={styles.helperText}>
+                  Your email is remembered. Password is never stored for security.
+                </Text>
+              )}
 
               <View style={styles.dividerRow}>
                 <View style={styles.divider} />
@@ -274,7 +419,12 @@ export default function LoginScreen() {
               </View>
 
               <View style={styles.socialRow}>
-                <TouchableOpacity style={styles.socialButton} activeOpacity={0.85}>
+                <TouchableOpacity
+                  style={styles.socialButton}
+                  activeOpacity={0.85}
+                  onPress={handleContinueWithGoogle}
+                  disabled={isAuthLoading}
+                >
                   <Ionicons name="logo-google" size={18} color={themeColors.text} />
                   <Text style={styles.socialText}>Google</Text>
                 </TouchableOpacity>
